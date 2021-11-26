@@ -162,9 +162,13 @@ class Edalizer:
             merge_dict(parameters, snippet["parameters"])
 
             # Extract tool options
-            snippet["tool_options"] = {
-                self.flags["tool"]: core.get_tool_options(_flags)
-            }
+            if self.flags.get("tool"):
+                snippet["tool_options"] = {
+                    self.flags["tool"]: core.get_tool_options(_flags)
+                }
+
+            # Extract flow options
+            snippet["flow_options"] = core.get_flow_options(_flags)
 
             # Extract scripts
             snippet["hooks"] = core.get_scripts(rel_root, _flags)
@@ -303,20 +307,35 @@ class Edalizer:
 
         # backend_args.
         backend_args = parser.add_argument_group("Backend arguments")
-        _opts = backend_class.get_doc(0)
 
-        for _opt in _opts.get("members", []) + _opts.get("lists", []):
-            backend_args.add_argument("--" + _opt["name"], help=_opt["desc"])
+        if hasattr(backend_class, "get_flow_options"):
+            for k, v in backend_class.get_flow_options().items():
+                backend_args.add_argument("--" + k, help=v["desc"])
+        else:
+            _opts = backend_class.get_doc(0)
+            for _opt in _opts.get("members", []) + _opts.get("lists", []):
+                backend_args.add_argument("--" + _opt["name"], help=_opt["desc"])
+
         return parser
 
     def add_parsed_args(self, backend_class, parsed_args):
-        _opts = backend_class.get_doc(0)
-        # Parse arguments
-        backend_members = [x["name"] for x in _opts.get("members", [])]
-        backend_lists = [x["name"] for x in _opts.get("lists", [])]
+        if hasattr(backend_class, "get_flow_options"):
+            backend_members = []
+            backend_lists = []
+            for k, v in backend_class.get_flow_options().items():
+                if v.get("list"):
+                    backend_lists.append(k)
+                else:
+                    backend_members.append(k)
+            tool_options = self.edam["flow_options"]
+        else:
+            _opts = backend_class.get_doc(0)
+            # Parse arguments
+            backend_members = [x["name"] for x in _opts.get("members", [])]
+            backend_lists = [x["name"] for x in _opts.get("lists", [])]
 
-        tool = backend_class.__name__.lower()
-        tool_options = self.edam["tool_options"][tool]
+            tool = backend_class.__name__.lower()
+            tool_options = self.edam["tool_options"][tool]
 
         for key, value in sorted(parsed_args.items()):
             if value is None:
