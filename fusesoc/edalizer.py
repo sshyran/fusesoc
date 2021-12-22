@@ -24,6 +24,17 @@ class FileAction(argparse.Action):
         setattr(namespace, self.dest, [path])
 
 
+def str2bool(v):
+    if isinstance(v, bool):
+        return v
+    if v.lower() in ("yes", "true", "t", "y", "1"):
+        return True
+    elif v.lower() in ("no", "false", "f", "n", "0"):
+        return False
+    else:
+        raise argparse.ArgumentTypeError("Boolean value expected.")
+
+
 class Edalizer:
     def __init__(
         self,
@@ -246,7 +257,7 @@ class Edalizer:
 
     def _build_parser(self, backend_class, edam):
         typedict = {
-            "bool": {"action": "store_true"},
+            "bool": {"type": str2bool, "nargs": "?", "const": True},
             "file": {"type": str, "nargs": 1, "action": FileAction},
             "int": {"type": int, "nargs": 1},
             "str": {"type": str, "nargs": 1},
@@ -310,7 +321,11 @@ class Edalizer:
 
         if hasattr(backend_class, "get_flow_options"):
             for k, v in backend_class.get_flow_options().items():
-                backend_args.add_argument("--" + k, help=v["desc"])
+                backend_args.add_argument(
+                    "--" + k,
+                    help=v["desc"],
+                    **typedict[v["type"]],
+                )
         else:
             _opts = backend_class.get_doc(0)
             for _opt in _opts.get("members", []) + _opts.get("lists", []):
