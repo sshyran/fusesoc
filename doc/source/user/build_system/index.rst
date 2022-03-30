@@ -23,7 +23,7 @@ The following sections explain how to do it.
 
 The first three sections are recommended reading for all users of FuseSoC.
 The first section :ref:`ug_build_system_core_files` is an introduction into :term:`core description files <core file>` and how to write them.
-The second and third section, :ref:`ug_build_system_tool_options` and :ref:`ug_build_system_dependencies` look at how to customize what the (EDA) :term:`tools <tool>` are doing, and how cores can be combined to form a larger system.
+The second and third section, :ref:`ug_build_system_eda_tools` and :ref:`ug_build_system_dependencies` look at how to customize what the (EDA) :term:`tools <tool>` are doing, and how cores can be combined to form a larger system.
 
 The subsequent sections are advanced topics, which are only relevant in some projects.
 
